@@ -1,0 +1,29 @@
+services:
+  redis-master:
+    image: 'redis:7-alpine'
+    container_name: ${COMPOSE_PROJECT_NAME}_redis_master
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    sysctls:
+      net.core.somaxconn: 65535
+      net.ipv4.ip_local_port_range: 1024 65535
+      net.ipv4.tcp_fin_timeout: 10
+      net.ipv4.tcp_keepalive_intvl: 5
+      net.ipv4.tcp_keepalive_probes: 3
+      net.ipv4.tcp_keepalive_time: 60
+      net.ipv4.tcp_max_syn_backlog: 100000
+      net.ipv4.tcp_max_tw_buckets: 1440000
+      net.ipv4.tcp_tw_reuse: 1
+    command: ["/usr/local/etc/redis/redis.conf"]
+    ports:
+      - '${DC_REDIS_PORT:-6379}:6379'
+    volumes:
+      - './config/redis.conf:/usr/local/etc/redis/redis.conf'
+      - './data/redis:/data'
+      - './log:/var/log/redis'
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
